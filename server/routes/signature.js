@@ -16,7 +16,8 @@ async function signature(req, res) {
             //this.events.approvalSent(1428).bind(this)
         } else if(helloEvent.event.event_type === "signature_request_all_signed") {
             let mJobID = parser.morawareJobID()
-            this.events.approvalSigned(this, mJobID)
+            let dl = helloEvent.signature_request.files_url
+            this.events.approvalSigned(this, mJobID, dl)
             this.log.success("Document Signed!")
         } else return this.log.verbose(helloEvent.event.event_type)
     })
