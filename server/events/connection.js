@@ -5,6 +5,7 @@ async function connection(_this) {
             #r "JobTrackerAPI5.dll"
             using System;
             using System.Threading.Tasks;
+            using System.IO;
             using System.Collections.Generic;
             using System.Linq;
             using System.Text;
@@ -14,8 +15,12 @@ async function connection(_this) {
             {
                 public async Task<object> Invoke(dynamic input)
                 {
+                    var newDir = Directory.GetCurrentDirectory() + @"\temp";
+                    Environment.CurrentDirectory = (newDir);
                     int jobid = (int)input.id;
                     var DB = (string)input.db;
+                    string jobIDString = jobid.ToString();
+                    string fileName = newDir + @"\" + @"signed-approval" + jobIDString + @".pdf";
                     var JTURL = "https://" + DB + ".moraware.net/";
                     var UID = (string)input.uid;
                     var PWD = (string)input.pwd;
@@ -24,7 +29,7 @@ async function connection(_this) {
                     var job = conn.GetJob(jobid);
                     var jobName = job.JobName;
                     conn.Disconnect();
-                    return jobName;
+                    return fileName;
                 }
             }
         */},
