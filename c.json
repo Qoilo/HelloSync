@@ -1,0 +1,15 @@
+{
+    "port": 80,
+    "securePort": 443,
+    "secure": false,
+    "moraware": {
+        "db": "subdomain",
+        "uid": "username",
+        "pwd": "password",
+        "testJobID": 1
+    },
+    "hellosign": {
+        "key": ""
+    },
+    "rm": {}
+}
