@@ -14,5 +14,5 @@ async function loadConfig() {
         ? c = require(`${__dirname}/c.real.json`)
         : c = require(`${__dirname}/c.json`)
 }
-process.on("unhandledRejection", async err => server.log.uncaughtError(err));
-process.on("uncaughtException", async err => server.log.uncaughtError(err));
+process.on("unhandledRejection", async err => server.log.uncaughtError(err.stack));
+process.on("uncaughtException", async err => server.log.uncaughtError(err.stack));

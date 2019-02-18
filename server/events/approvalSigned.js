@@ -15,12 +15,12 @@ async function approvalSigned(__this, jobID, dl) {
             {
                 public async Task<object> Invoke(dynamic input)
                 {
-                    var newDir = Directory.GetCurrentDirectory() + @"\temp";
+                    var newDir = Directory.GetCurrentDirectory() + @"/temp";
                     Environment.CurrentDirectory = (newDir);
                     int jobid = (int)input.id;
                     var DB = (string)input.db;
                     string jobIDString = jobID.ToString();
-                    string filePath = newDir + @"\" + @"signed-approval" + jobIDString + @".pdf";
+                    string filePath = newDir + @"/" + @"signed-approval" + jobIDString + @".pdf";
                     var JTURL = "https://" + DB + ".moraware.net/";
                     var UID = (string)input.uid;
                     var PWD = (string)input.pwd;
@@ -34,7 +34,7 @@ async function approvalSigned(__this, jobID, dl) {
                 }
             }
         */},
-        references: ["JobTrackerAPI5.dll"]
+        references: [`JobTrackerAPI5.dll`]
     });
 
     s.get(dl).then(r => {
