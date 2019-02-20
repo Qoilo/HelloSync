@@ -10,15 +10,12 @@ async function signature(req, res) {
     let form = new formidable.IncomingForm()
     form.parse(req, (err, fields, files) => {
         let helloEvent = JSON.parse(fields.json)
-        console.log(`raw: ${typeof(fields.json)}`)
-        console.log(`new: ${typeof(helloEvent)}`)
         let parser = new HelloParser(helloEvent.signature_request.message)
         if(helloEvent.event.event_type === "signature_request_sent") {
             // This event will be finished last, after ApprovalSigned is confirmed working & uploading
-            //this.events.approvalSent(1428).bind(this)
         } else if(helloEvent.event.event_type === "signature_request_all_signed") {
             let mJobID = parser.morawareJobID()
-            let dl = helloEvent.signature_request.files_url
+            let dl = helloEvent.signature_request.signature_request_id
             this.events.approvalSigned(this, mJobID, dl)
             this.log.success("Document Signed!")
         } else return this.log.verbose(helloEvent.event.event_type)

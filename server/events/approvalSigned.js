@@ -1,11 +1,19 @@
 const edge = require("edge-js");
 const s = require("snekfetch")
+const events = require("events")
+const fs = require("fs")
+const emitter = new events.EventEmitter();
 async function approvalSigned(_this, jobID, dl) {
+    const downloaded = function downloaded() {
+        _this.log.verbose("Finished Downloading")
+    }
+    emitter.addListener("downloaded", downloaded)
     let uploadToMoraware = edge.func({
         source: () => {/*
-            #r "JobTrackerAPI5.dll"
+            #r "C:\\Users\\Administrator\\Downloads\\HelloSync-master\\HelloSync-master\\JobTrackerAPI5.dll"
             using System;
             using System.Threading.Tasks;
+            using System.IO;
             using System.Collections.Generic;
             using System.Linq;
             using System.Text;
@@ -15,12 +23,12 @@ async function approvalSigned(_this, jobID, dl) {
             {
                 public async Task<object> Invoke(dynamic input)
                 {
-                    var newDir = Directory.GetCurrentDirectory() + @"\temp";
+                    var newDir = Directory.GetCurrentDirectory();
                     Environment.CurrentDirectory = (newDir);
                     int jobid = (int)input.id;
                     var DB = (string)input.db;
-                    string jobIDString = jobID.ToString();
-                    string filePath = newDir + @"/" + @"signed-approval" + jobIDString + @".pdf";
+                    string jobIDString = jobid.ToString();
+                    string filePath = newDir + @"\" + @"signed-approval" + jobIDString + @".pdf";
                     var JTURL = "https://" + DB + ".moraware.net/";
                     var UID = (string)input.uid;
                     var PWD = (string)input.pwd;
@@ -30,26 +38,34 @@ async function approvalSigned(_this, jobID, dl) {
                     var fi = new FileInfo(filePath);
                     conn.UploadJobFile(jf, fi, false);
                     conn.Disconnect();
-                    return jobName;
+                    return filePath;
                 }
             }
         */},
-        references: [`JobTrackerAPI5.dll`]
+        references: [`C:\\Users\\Administrator\\Downloads\\HelloSync-master\\HelloSync-master\\JobTrackerAPI5.dll`]
     });
 
-    s.get(dl).then(r => {
-        fs.writeFile(`${__dirname}/../../temp/signed-approval${jobID}.pdf`, r.body, (err) => {
-            uploadToMoraware({id: jobID, uid: _this.c.moraware.uid, pwd: _this.c.moraware.pwd, db: _this.c.moraware.db}, (error, result) => {
-                error 
-                    ? _this.log.error(error)
-                    : _this.log.success(result)
-                fs.unlink(`${__dirname}/../../temp/signed-approval${jobID}.pdf`, err => {
-                    err
-                        ? _this.log.error(err)
-                        : _this.log.success(`Successfully Deleted File: signed-approval${jobID}.pdf`)
-                })
-            });
+    _this.hellosign.signatureRequest.download(dl, {file_type: "pdf"}, (err, res) => {
+        let fl = fs.createWriteStream(`${__dirname}/../../temp/signed-approval${jobID}.pdf`)
+        res.pipe(fl)
+        fl.on("finish", () => {
+            fl.close()
+            _this.log.verbose("Successfully wrote signed approval to disk")
+            emitter.emit("downloaded")
         })
+    })
+    emitter.on("downloaded", () => {
+        _this.log.warning("Firing Downloaded Event")
+        uploadToMoraware({id: parseInt(jobID), uid: _this.c.moraware.uid, pwd: _this.c.moraware.pwd, db: _this.c.moraware.db}, (error, result) => {
+            error 
+                ? _this.log.error(error.stack)
+                : _this.log.success(result)
+            fs.unlink(`${__dirname}/../../temp/signed-approval${jobID}.pdf`, err => {
+                err
+                    ? _this.log.error(err.stack)
+                    : _this.log.success(`Successfully Deleted File: signed-approval${jobID}.pdf`)
+            })
+        });
     })
 }
 
