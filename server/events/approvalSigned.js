@@ -1,6 +1,6 @@
 const edge = require("edge-js");
 const s = require("snekfetch")
-async function approvalSigned(__this, jobID, dl) {
+async function approvalSigned(_this, jobID, dl) {
     let uploadToMoraware = edge.func({
         source: () => {/*
             #r "JobTrackerAPI5.dll"
@@ -15,7 +15,7 @@ async function approvalSigned(__this, jobID, dl) {
             {
                 public async Task<object> Invoke(dynamic input)
                 {
-                    var newDir = Directory.GetCurrentDirectory() + @"/temp";
+                    var newDir = Directory.GetCurrentDirectory() + @"\temp";
                     Environment.CurrentDirectory = (newDir);
                     int jobid = (int)input.id;
                     var DB = (string)input.db;
@@ -46,7 +46,7 @@ async function approvalSigned(__this, jobID, dl) {
                 fs.unlink(`${__dirname}/../../temp/signed-approval${jobID}.pdf`, err => {
                     err
                         ? _this.log.error(err)
-                        : _this.log.success(`Successfully Delete File: signed-approval${jobID}.pdf`)
+                        : _this.log.success(`Successfully Deleted File: signed-approval${jobID}.pdf`)
                 })
             });
         })
