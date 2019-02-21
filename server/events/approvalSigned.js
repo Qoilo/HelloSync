@@ -4,6 +4,7 @@ const events = require("events")
 const fs = require("fs")
 const emitter = new events.EventEmitter();
 async function approvalSigned(_this, jobID, dl) {
+    const fileToken = _this.utils.randomToken()
     const downloaded = function downloaded() {
         _this.log.verbose("Finished Downloading")
     }
@@ -27,14 +28,14 @@ async function approvalSigned(_this, jobID, dl) {
                     Environment.CurrentDirectory = (newDir);
                     int jobid = (int)input.id;
                     var DB = (string)input.db;
-                    string jobIDString = jobid.ToString();
-                    string filePath = newDir + @"\" + @"signed-approval" + jobIDString + @".pdf";
+                    string fileToken = (string)input.token;
+                    string filePath = newDir + @"\" + @"hellosign-document-" + fileToken + @".pdf";
                     var JTURL = "https://" + DB + ".moraware.net/";
                     var UID = (string)input.uid;
                     var PWD = (string)input.pwd;
                     Connection conn = new Connection(JTURL + "api.aspx", UID, PWD);
                     conn.Connect();
-                    var jf = new JobFile(jobid, "signed-approval.pdf");
+                    var jf = new JobFile(jobid, "hellosign-document-" + fileToken + ".pdf");
                     var fi = new FileInfo(filePath);
                     conn.UploadJobFile(jf, fi, false);
                     conn.Disconnect();
@@ -46,7 +47,7 @@ async function approvalSigned(_this, jobID, dl) {
     });
 
     _this.hellosign.signatureRequest.download(dl, {file_type: "pdf"}, (err, res) => {
-        let fl = fs.createWriteStream(`${__dirname}/../../temp/signed-approval${jobID}.pdf`)
+        let fl = fs.createWriteStream(`${__dirname}/../../temp/hellosign-document-${fileToken}.pdf`)
         res.pipe(fl)
         fl.on("finish", () => {
             fl.close()
@@ -56,14 +57,14 @@ async function approvalSigned(_this, jobID, dl) {
     })
     emitter.on("downloaded", () => {
         _this.log.warning("Firing Downloaded Event")
-        uploadToMoraware({id: parseInt(jobID), uid: _this.c.moraware.uid, pwd: _this.c.moraware.pwd, db: _this.c.moraware.db}, (error, result) => {
+        uploadToMoraware({id: parseInt(jobID), uid: _this.c.moraware.uid, pwd: _this.c.moraware.pwd, db: _this.c.moraware.db, token: fileToken}, (error, result) => {
             error 
                 ? _this.log.error(error.stack)
                 : _this.log.success(result)
-            fs.unlink(`${__dirname}/../../temp/signed-approval${jobID}.pdf`, err => {
+            fs.unlink(`${__dirname}/../../temp/hellosign-document-${fileToken}.pdf`, err => {
                 err
                     ? _this.log.error(err.stack)
-                    : _this.log.success(`Successfully Deleted File: signed-approval${jobID}.pdf`)
+                    : _this.log.success(`Successfully Deleted File: hellosign-document-${fileToken}.pdf`)
             })
         });
     })
