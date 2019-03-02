@@ -14,10 +14,14 @@ async function signature(req, res) {
         if(helloEvent.event.event_type === "signature_request_sent") {
             // This event will be finished last, after ApprovalSigned is confirmed working & uploading
         } else if(helloEvent.event.event_type === "signature_request_all_signed") {
-            if(this.c.moraware.enabled) let mJobID = parser.morawareJobID()
-            if(this.c.rollmaster.enabled) let cN = parser.rmCompany()
-            if(this.c.rollmaster.enabled) let bN = parser.rmBranch()
-            if(this.c.rollmaster.enabled) let oN = parser.rmONum()
+            let mJobID = "HelloSync_Not_Set",
+                cN = "HelloSync_Not_Set",
+                bN = "HelloSync_Not_Set",
+                oN = "HelloSync_Not_Set"
+            if(this.c.moraware.enabled) mJobID = parser.morawareJobID()
+            if(this.c.rollmaster.enabled) cN = parser.rmCompany()
+            if(this.c.rollmaster.enabled) bN = parser.rmBranch()
+            if(this.c.rollmaster.enabled) oN = parser.rmONum()
             let dl = helloEvent.signature_request.signature_request_id
             this.events.approvalSigned(this, mJobID, dl)
             this.log.success("Document Signed!")

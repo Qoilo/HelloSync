@@ -3,6 +3,7 @@
     "securePort": 443,
     "secure": false,
     "moraware": {
+        "enabled": true,
         "db": "subdomain",
         "uid": "username",
         "pwd": "password",
@@ -11,5 +12,9 @@
     "hellosign": {
         "key": ""
     },
-    "rm": {}
+    "rm": {
+        "enabled": true,
+        "key": ""
+    },
+    "enabledServices": ["rm", "moraware"]
 }

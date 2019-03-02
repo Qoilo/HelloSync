@@ -2,13 +2,28 @@ const edge = require("edge-js");
 const s = require("snekfetch")
 const events = require("events")
 const fs = require("fs")
-const emitter = new events.EventEmitter();
-async function approvalSigned(_this, jobID, dl) {
+const sync = new events.EventEmitter();
+async function approvalSigned(_this, jobID, rmCompany, rmBranch, rmONum, dl) {
     const fileToken = _this.utils.randomToken()
     const downloaded = function downloaded() {
-        _this.log.verbose("Finished Downloading")
+        _this.log.verbose("Finished Downloading PDF")
     }
-    emitter.addListener("downloaded", downloaded)
+    const uploaded = function uploaded() {
+        _this.log.verbose("Finished Uploading To Service")
+    }
+    sync.addListener("downloaded", downloaded)
+    sync.addListener("uploaded", uploaded)
+    const rmKey = _this.c.rm.key
+    const rmBase = "https://api.rmaster.com/api"
+    let services = _this.c.enabledServices
+    let count = 0
+    let rmToken
+    s.post(`${rmBase}/token?api_key=${rmKey}`)
+        .attach("username", _this.c.rm.username)
+        .attach("password", _this.c.rm.pass)
+        .then(r => {
+            rmToken = r.body.TOKEN
+        })
     let uploadToMoraware = edge.func({
         source: () => {/*
             #r "C:\\Users\\Administrator\\Downloads\\HelloSync-master\\HelloSync-master\\JobTrackerAPI5.dll"
@@ -52,21 +67,48 @@ async function approvalSigned(_this, jobID, dl) {
         fl.on("finish", () => {
             fl.close()
             _this.log.verbose("Successfully wrote signed approval to disk")
-            emitter.emit("downloaded")
+            sync.emit("downloaded")
         })
     })
-    emitter.on("downloaded", () => {
+    sync.on("downloaded", () => {
         _this.log.warning("Firing Downloaded Event")
-        uploadToMoraware({id: parseInt(jobID), uid: _this.c.moraware.uid, pwd: _this.c.moraware.pwd, db: _this.c.moraware.db, token: fileToken}, (error, result) => {
-            error 
-                ? _this.log.error(error.stack)
-                : _this.log.success(result)
+
+        ///////////////////////////////////
+        //  Moraware
+        if(services.includes("moraware")) {
+            count++
+            uploadToMoraware({id: parseInt(jobID), uid: _this.c.moraware.uid, pwd: _this.c.moraware.pwd, db: _this.c.moraware.db, token: fileToken}, (error, result) => {
+                error 
+                    ? _this.log.error(error.stack)
+                    : _this.log.success(result)
+                sync.emit("uploaded")
+            });
+        }
+        //
+        ///////////////////////////////////
+
+        ///////////////////////////////////
+        // RollMaster
+        if(services.includes("rm")) {
+            count = count++
+            s.post(`${rmBase}/edoc?api_key=${rmKey}`, {headers: {token: rmToken}})
+                .attach("company", rmCompany)
+                .attach("branch", rmBranch)
+                .attach("edoctype", "order")
+                .attach()
+            sync.emit("uploaded")
+        }
+        //
+        ///////////////////////////////////
+    })
+    sync.on("uploaded", () => {
+        if(count >= services.length) {
             fs.unlink(`${__dirname}/../../temp/hellosign-document-${fileToken}.pdf`, err => {
                 err
                     ? _this.log.error(err.stack)
                     : _this.log.success(`Successfully Deleted File: hellosign-document-${fileToken}.pdf`)
             })
-        });
+        }
     })
 }
 
