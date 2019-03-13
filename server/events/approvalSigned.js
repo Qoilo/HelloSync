@@ -17,14 +17,6 @@ async function approvalSigned(_this, dl) {
     const rmBase = "https://api.rmaster.com/api/flooringliquidators"
     let services = _this.c.enabledServices
     let count = 0
-    let rmToken
-    s.post(`${rmBase}/token?api_key=${rmKey}`)
-        .attach("username", _this.c.rm.username)
-        .attach("password", _this.c.rm.pass)
-        .attach("granttype", "application")
-        .then(r => {
-            rmToken = r.body.TOKEN
-        });
     let uploadToMoraware = edge.func({
         source: () => {/*
             #r "C:\\Users\\Administrator\\Downloads\\HelloSync-master\\HelloSync-master\\JobTrackerAPI5.dll"
@@ -92,13 +84,22 @@ async function approvalSigned(_this, dl) {
         // RollMaster
         if(services.includes("rm")) {
             count = count++
-            s.post(`${rmBase}/edoc?api_key=${rmKey}`, {headers: {token: rmToken}})
-                .attach("company", _this.cN)
-                .attach("branch", _this.bN)
-                .attach("edoctype", "order")
-                .attach("order", _this.oN)
-                .attach()
-            sync.emit("uploaded")
+            s.post(`${rmBase}/token?api_key=${rmKey}`)
+                .attach("username", _this.c.rm.username)
+                .attach("password", _this.c.rm.pass)
+                .attach("granttype", "application")
+                .then(r => {
+                    let rmToken = r.body.TOKEN
+                    s.post(`${rmBase}/edoc?api_key=${rmKey}`, {headers: {token: rmToken}})
+                        .attach("company", _this.cN)
+                        .attach("branch", _this.bN)
+                        .attach("edoctype", "order")
+                        .attach("order", _this.oN)
+                        .attach()
+                        .then(edocR => {
+                            sync.emit("uploaded")
+                        });
+                    });
         }
         //
         ///////////////////////////////////

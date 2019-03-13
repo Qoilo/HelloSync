@@ -14,7 +14,7 @@ class HelloSync {
     this.utils = utils
     this.log = utils.log
     this.auth = utils.auth
-    this.c = c;
+    this.c = c
     this.app = app
     this.app.use(bodyParser.text())
     this.app.use(bodyParser.json());
