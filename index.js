@@ -2,10 +2,9 @@ const HelloSync = require(`${__dirname}/server/app`);
 let c 
 let server
 loadConfig().then(() => {
-  console.log(c.testJobID)
   server = new HelloSync(c);
 })
-process.on('SIGINT', async () => {
+process.on("SIGINT", async () => {
   server.log.warning('Gracefully exiting..');
   process.exit();
 });

@@ -3,7 +3,7 @@ const s = require("snekfetch")
 const events = require("events")
 const fs = require("fs")
 const sync = new events.EventEmitter();
-async function approvalSigned(_this, jobID, rmCompany, rmBranch, rmONum, dl) {
+async function approvalSigned(_this, dl) {
     const fileToken = _this.utils.randomToken()
     const downloaded = function downloaded() {
         _this.log.verbose("Finished Downloading PDF")
@@ -14,16 +14,17 @@ async function approvalSigned(_this, jobID, rmCompany, rmBranch, rmONum, dl) {
     sync.addListener("downloaded", downloaded)
     sync.addListener("uploaded", uploaded)
     const rmKey = _this.c.rm.key
-    const rmBase = "https://api.rmaster.com/api"
+    const rmBase = "https://api.rmaster.com/api/flooringliquidators"
     let services = _this.c.enabledServices
     let count = 0
     let rmToken
     s.post(`${rmBase}/token?api_key=${rmKey}`)
         .attach("username", _this.c.rm.username)
         .attach("password", _this.c.rm.pass)
+        .attach("granttype", "application")
         .then(r => {
             rmToken = r.body.TOKEN
-        })
+        });
     let uploadToMoraware = edge.func({
         source: () => {/*
             #r "C:\\Users\\Administrator\\Downloads\\HelloSync-master\\HelloSync-master\\JobTrackerAPI5.dll"
@@ -92,9 +93,10 @@ async function approvalSigned(_this, jobID, rmCompany, rmBranch, rmONum, dl) {
         if(services.includes("rm")) {
             count = count++
             s.post(`${rmBase}/edoc?api_key=${rmKey}`, {headers: {token: rmToken}})
-                .attach("company", rmCompany)
-                .attach("branch", rmBranch)
+                .attach("company", _this.cN)
+                .attach("branch", _this.bN)
                 .attach("edoctype", "order")
+                .attach("order", _this.oN)
                 .attach()
             sync.emit("uploaded")
         }
